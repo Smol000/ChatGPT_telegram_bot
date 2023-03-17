@@ -13,39 +13,8 @@ env = {
     **dotenv_values(".env.dev"),  # override
 }
 
-API_KEYS_CHATGPT = [
-    env["API_KEY_CHATGPT"],
-    env["API_KEY_CHATGPT_1"],
-    env["API_KEY_CHATGPT_2"],
-    env["API_KEY_CHATGPT_3"],
-    env["API_KEY_CHATGPT_4"],
-    env["API_KEY_CHATGPT_5"],
-    env["API_KEY_CHATGPT_6"],
-    env["API_KEY_CHATGPT_7"],
-    env["API_KEY_CHATGPT_8"],
-    env["API_KEY_CHATGPT_9"],
-    env["API_KEY_CHATGPT_10"],
-    env["API_KEY_CHATGPT_11"],
-    env["API_KEY_CHATGPT_12"],
-    env["API_KEY_CHATGPT_13"],
-    env["API_KEY_CHATGPT_14"],
-    env["API_KEY_CHATGPT_15"],
-    env["API_KEY_CHATGPT_16"],
-    env["API_KEY_CHATGPT_17"],
-    env["API_KEY_CHATGPT_18"],
-    env["API_KEY_CHATGPT_19"],
-    env["API_KEY_CHATGPT_20"],
-    env["API_KEY_CHATGPT_21"],
-    env["API_KEY_CHATGPT_22"],
-    env["API_KEY_CHATGPT_23"],
-    env["API_KEY_CHATGPT_24"],
-    env["API_KEY_CHATGPT_25"],
-    env["API_KEY_CHATGPT_26"],
-    env["API_KEY_CHATGPT_27"],
-    env["API_KEY_CHATGPT_28"],
-    env["API_KEY_CHATGPT_29"],
-    env["API_KEY_CHATGPT_30"],
-]
+API_KEYS_CHATGPT = [env[f"API_KEY_CHATGPT_{i}"] for i in range(1, 31)]
+
 bot = telebot.TeleBot(env["TG_BOT_TOKEN"])
 db_link = env["DB_LINK"]
 
@@ -71,7 +40,7 @@ def write_to_db(message):
             conn.commit()
             conn.close()
             bot.send_message(
-                612063160,
+                message.chat.id,
                 f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
             )
     else:
@@ -93,21 +62,14 @@ def write_to_db(message):
             conn.commit()
             conn.close()
             bot.send_message(
-                612063160,
+                message.chat.id,
                 f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
             )
     conn.commit()
     conn.close()
 
-
-def check_length(answer, list_of_answers):
-    if len(answer) > 4090 and len(answer) < 409000:
-        list_of_answers.append(answer[0:4090] + "...")
-        check_length(answer[4091:], list_of_answers)
-    else:
-        list_of_answers.append(answer[0:])
-        return list_of_answers
-
+def split_answer(answer, chunk_size=4090):
+    return [answer[i:i+chunk_size] + "..." for i in range(0, len(answer), chunk_size)]
 
 def make_request(message, api_key_numb):
     try:
@@ -118,7 +80,7 @@ def make_request(message, api_key_numb):
             temperature=0.5,
             max_tokens=3100,
         )
-        list_of_answers = check_length(completion.choices[0]["text"], [])
+        list_of_answers = split_answer(completion.choices[0]["text"])
         if list_of_answers:
             for piece_of_answer in list_of_answers:
                 bot.send_message(message.chat.id, piece_of_answer)
@@ -132,7 +94,7 @@ def make_request(message, api_key_numb):
         else:
             if not key_end:
                 bot.send_message(
-                    612063160,
+                    message.chat.id,
                     f"Ключи закончились!!!",
                 )
             key_end = True
