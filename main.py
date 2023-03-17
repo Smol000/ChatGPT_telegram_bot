@@ -18,7 +18,6 @@ API_KEYS_CHATGPT = [env[f"API_KEY_CHATGPT_{i}"] for i in range(1, 31)]
 bot = telebot.TeleBot(env["TG_BOT_TOKEN"])
 db_link = env["DB_LINK"]
 
-
 def write_to_db(message):
     conn = sqlite3.connect(db_link)
     cursor = conn.cursor()
@@ -36,9 +35,8 @@ def write_to_db(message):
                     str(message.chat.id),
                 ),
             )
-        except:
             conn.commit()
-            conn.close()
+        except:
             bot.send_message(
                 message.chat.id,
                 f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
@@ -58,14 +56,12 @@ def write_to_db(message):
                     message.text,
                 ),
             )
-        except:
             conn.commit()
-            conn.close()
+        except:
             bot.send_message(
                 message.chat.id,
                 f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
             )
-    conn.commit()
     conn.close()
 
 def split_answer(answer, chunk_size=4090):
