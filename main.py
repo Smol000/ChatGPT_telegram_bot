@@ -19,50 +19,50 @@ bot = telebot.TeleBot(env["TG_BOT_TOKEN"])
 db_link = env["DB_LINK"]
 
 def write_to_db(message):
-    conn = sqlite3.connect(db_link)
-    cursor = conn.cursor()
-    select_id = cursor.execute(
-        "SELECT id FROM user WHERE chat_id = ?", (str(message.chat.id),)
-    )
-    select_id = select_id.fetchone()
-    if select_id:
-        try:
-            cursor.execute(
-                "UPDATE user SET last_msg=?, last_login=? WHERE chat_id=?",
-                (
-                    message.text,
-                    str(message.date),
-                    str(message.chat.id),
-                ),
-            )
-            conn.commit()
-        except:
-            bot.send_message(
-                message.chat.id,
-                f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
-            )
-    else:
-        try:
-            cursor.execute(
-                "INSERT INTO user (chat_id, last_login, username, first_name, last_name, last_msg) VALUES (?,?,?,?,?,?)",
-                (
-                    str(message.chat.id),
-                    str(message.date),
-                    message.chat.username if message.chat.username else "-",
-                    message.chat.first_name
-                    if message.chat.first_name
-                    else "-",
-                    message.chat.last_name if message.chat.last_name else "-",
-                    message.text,
-                ),
-            )
-            conn.commit()
-        except:
-            bot.send_message(
-                message.chat.id,
-                f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
-            )
-    conn.close()
+    with sqlite3.connect(db_link) as conn:
+        cursor = conn.cursor()
+        select_id = cursor.execute(
+            "SELECT id FROM user WHERE chat_id = ?", (str(message.chat.id),)
+        )
+        select_id = select_id.fetchone()
+        if select_id:
+            try:
+                cursor.execute(
+                   "UPDATE user SET last_msg=?, last_login=? WHERE chat_id=?",
+                   (
+                       message.text,
+                       str(message.date),
+                       str(message.chat.id),
+                   ),
+                )
+                conn.commit()
+            except:
+                bot.send_message(
+                    message.chat.id,
+                    f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
+                )
+        else:
+            try:
+                cursor.execute(
+                    "INSERT INTO user (chat_id, last_login, username, first_name, last_name, last_msg) VALUES (?,?,?,?,?,?)",
+                    (
+                        str(message.chat.id),
+                        str(message.date),
+                        message.chat.username if message.chat.username else "-",
+                        message.chat.first_name
+                        if message.chat.first_name
+                        else "-",
+                        message.chat.last_name if message.chat.last_name else "-",
+                        message.text,
+                    ),
+                )
+                conn.commit()
+            except:
+                bot.send_message(
+                    message.chat.id,
+                    f"Ошибка при добавлении (INSERT) данных в базе Пользователь: {message.chat.id}",
+                )
+        conn.close()
 
 def split_answer(answer, chunk_size=4090):
     return [answer[i:i+chunk_size] + "..." for i in range(0, len(answer), chunk_size)]
